@@ -41,6 +41,40 @@ cleaned_train_df = combined_df[combined_df["source"] == "train"].drop(columns=["
 cleaned_valid_df = combined_df[combined_df["source"] == "valid"].drop(columns=["source", "Id"])
 cleaned_test_df = combined_df[combined_df["source"] == "test"].drop(columns=["source", "index", "target"])
 
+def replace_ltv_with_estimate(row, upb_col, ltv_col):
+    orig_ltv = row['OriginalLTV']
+    orig_upb = row['OriginalUPB']
+    
+    ltv_values = row[ltv_col].astype(float).values
+    upb_values = row[upb_col].astype(float).values
+    mask_999 = (ltv_values == 999)
+
+    with np.errstate(divide='ignore', invalid='ignore'):
+        computed = orig_ltv * (upb_values / orig_upb)
+    
+    ltv_values[mask_999] = computed[mask_999]
+    return ltv_values
+
+def upd_est_LTV(df: pd.DataFrame):
+    ltv_col = []
+    upb_col = []
+    
+    for c in df.columns:
+        if 'EstimatedLTV' in c:
+            ltv_col.append(c)
+        
+        if 'CurrentActualUPB' in c:
+            upb_col.append(c)
+
+    df['EstimatedLTV_all_MissFlag'] = (df[ltv_col] == 999).all(axis=1).astype(int)
+    df[ltv_col] = df.apply(replace_ltv_with_estimate, upb_col = upb_col, ltv_col = ltv_col, axis=1, result_type='expand')
+
+    return df
+
+cleaned_train_df = upd_est_LTV(cleaned_train_df)
+cleaned_valid_df = upd_est_LTV(cleaned_valid_df)
+cleaned_test_df = upd_est_LTV(cleaned_test_df)
+
 cleaned_train_df.to_csv('clean_data/cleaned_loans_train.csv', index=False)
 cleaned_valid_df.to_csv('clean_data/cleaned_loans_valid.csv', index=False)
 cleaned_test_df.to_csv('clean_data/cleaned_loans_test.csv', index=False)
