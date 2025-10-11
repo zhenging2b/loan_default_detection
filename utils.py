@@ -89,7 +89,7 @@ def risk_assessment(df: pd.DataFrame)-> pd.DataFrame:
     df['HighRiskCredit'] = (df['CreditScore'] < 620).astype(int)
     df['HighLTV'] = (df['OriginalLTV'] > 80).astype(int)
     df['HighDTI'] = (df['OriginalDTI'] > 43).astype(int)
-    df['HighInterestRate'] = (df['OriginalInterestRate'] > df['OriginalInterestRate'].quantile(0.75)).astype(int)
+    df['HighInterestRate'] = (df['OriginalInterestRate'] > 7).astype(int)
 
     # Combined risk score
     df['CompositeRiskScore'] = (df['HighRiskCredit'] + 
