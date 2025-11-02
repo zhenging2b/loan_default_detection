@@ -26,6 +26,26 @@ def create_temporal_features(df: pd.DataFrame) -> pd.DataFrame:
     temporal_features["UPB_trend"] = temporal_features[upb_cols].iloc[:, -1] - temporal_features[upb_cols].iloc[:, 0]
     temporal_features["UPB_range"] = temporal_features[upb_cols].max(axis=1) - temporal_features[upb_cols].min(axis=1)
 
+    # --- New Feature Logic ---
+    def get_longest_non_decreasing_streak(row):
+        """Calculates the longest consecutive streak of non-decreasing values."""
+        # A non-decreasing UPB means the difference (current - previous) is >= 0.
+        is_non_decreasing = row.diff().dropna() >= 0
+
+        max_streak = 0
+        current_streak = 0
+        for val in is_non_decreasing:
+            if val:
+                current_streak += 1
+            else:
+                max_streak = max(max_streak, current_streak)
+                current_streak = 0
+        # Final check in case the series ends on a streak
+        max_streak = max(max_streak, current_streak)
+        return max_streak
+
+    temporal_features['longest_unchanged_UPB'] = df[upb_cols].apply(get_longest_non_decreasing_streak, axis=1)
+    # --- End of New Feature Logic ---
     return temporal_features
 
 def summary_stats_user(df: pd.DataFrame)-> pd.DataFrame:
