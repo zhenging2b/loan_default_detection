@@ -1,0 +1,8 @@
+#!c:\users\kaitl\desktop\masters\cs5344\loan_default_detection\.venv\scripts\python.exe
+# -*- coding: UTF-8 -*-
+from __future__ import print_function, division, absolute_import
+
+from numba.misc.numba_entry import main
+
+if __name__ == "__main__":
+    main()
